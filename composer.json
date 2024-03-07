@@ -1,6 +1,6 @@
 {
-    "name": "bref/secrets-loader",
-    "description": "Load secret values from SSM into environment variables ",
+    "name": "f-lombardo/secrets-loader",
+    "description": "Load secret values from SSM into environment variables - Forked from bref/secrets-loader ",
     "keywords": ["bref", "secrets", "aws-ssm", "ssm"],
     "license": "MIT",
     "type": "library",

@@ -1,5 +1,24 @@
 Automatically load secrets from SSM into environment variables when running with Bref.
 
+This work is a fork of the [project](https://github.com/brefphp/secrets-loader) created by [Matthieu Napoli](https://github.com/mnapoli).
+
+I introduced here the ability to have an SSM parameter containing many application environment variables in ini format.
+
+Migrating an existing complex Symfony application to Bref leads to having many environment variables defined in `serverless.yml`.
+Instead of having a one to one mapping between lambda environment variables and SSM parameters, 
+I suggest to have a single lambda environment variable with the special name `BREF_PARAMETER_STORE` that stores a string in ini format. 
+That string will be expanded in many application environment variables.
+For example a lambda could have the environment variable `BREF_PARAMETER_STORE=ssm:/some/parameter`. Data contained in that parameter could be:
+```
+VAR1=foo
+VAR2=bar
+```
+The lambda execution runtime should then see `VAR1=foo` and `VAR2=bar` as environment variables. I suggest to use the `ssn:` prefix in front of the value of the parameter to let a future implementation using Secrets Manager.
+
+This project is fully compatible with the behavior of the original library, which documentation I report below.
+
+---
+
 It replaces (at runtime) the variables whose value starts with `bref-ssm:`. For example, you could set such a variable in `serverless.yml` like this:
 
 ```yaml
