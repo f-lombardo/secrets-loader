@@ -15,7 +15,7 @@ VAR2=bar
 ```
 The lambda execution runtime should then see `VAR1=foo` and `VAR2=bar` as environment variables. I suggest to use the `ssn:` prefix in front of the value of the parameter to let a future implementation using Secrets Manager.
 
-This project is fully compatible with the behavior of the original library, which documentation I report below.
+This project is fully compatible with the behavior of the original library, whose documentation I report below.
 
 ---
 
@@ -54,7 +54,7 @@ This feature is shipped as a separate package so that all its code and dependenc
 ## Installation
 
 ```
-composer require bref/secrets-loader
+composer require f-lombardo/secrets-loader
 ```
 
 ## Usage
