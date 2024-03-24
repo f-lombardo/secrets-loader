@@ -196,10 +196,7 @@ class Secrets
      */
     private static function readEnvFromParameterStore(string $parameterStoreName, ?SsmClient $ssmClient): array
     {
-        // The ssm: prefix will allow to implement a secretsmanager: prefix in the future
-        $cleanParameterStoreName = substr($parameterStoreName, strlen('ssm:'));
-
-        $iniValues = self::retrieveParametersFromSsm($ssmClient, [$cleanParameterStoreName])[$cleanParameterStoreName];
+        $iniValues = self::retrieveParametersFromSsm($ssmClient, [$parameterStoreName])[$parameterStoreName];
 
         $values = parse_ini_string($iniValues);
         if ($values === false) {

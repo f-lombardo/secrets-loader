@@ -13,7 +13,7 @@ For example a lambda could have the environment variable `BREF_PARAMETER_STORE=s
 VAR1=foo
 VAR2=bar
 ```
-The lambda execution runtime should then see `VAR1=foo` and `VAR2=bar` as environment variables. I suggest to use the `ssm:` prefix in front of the value of the parameter to let a future implementation using Secrets Manager.
+The lambda execution runtime should then see `VAR1=foo` and `VAR2=bar` as environment variables.
 
 This project is fully compatible with the behavior of the original library, whose documentation I report below.
 
@@ -41,7 +41,7 @@ and we have this `severless.yml` configuration with the special variable `BREF_P
 provider:
     # ...
     environment:
-      BREF_PARAMETER_STORE: ssm:/my-app/my-par-store
+      BREF_PARAMETER_STORE: /my-app/my-par-store
 ```
 our lambda will see the these environment variables:
 ```shell
