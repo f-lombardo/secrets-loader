@@ -51,6 +51,13 @@ BAR=baz
 
 This feature is shipped as a separate package so that all its code and dependencies are not installed by default for all Bref users. Install this package if you want to use the feature.
 
+## Running tests and quality checks
+
+You can run tests and quality checks on this code by using the [quality.sh](scripts/quality.sh) script:
+```shell
+scripts/quality.sh
+```
+
 ## Installation
 
 ```
