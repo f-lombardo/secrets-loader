@@ -5,6 +5,6 @@
 
 git checkout master || exit 1
 
-PKG_VER=1.0.0
+PKG_VER=1.0.1
 
 git tag -a $PKG_VER -m $PKG_VER && git push origin $PKG_VER
