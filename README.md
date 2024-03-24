@@ -13,7 +13,7 @@ For example a lambda could have the environment variable `BREF_PARAMETER_STORE=s
 VAR1=foo
 VAR2=bar
 ```
-The lambda execution runtime should then see `VAR1=foo` and `VAR2=bar` as environment variables. I suggest to use the `ssn:` prefix in front of the value of the parameter to let a future implementation using Secrets Manager.
+The lambda execution runtime should then see `VAR1=foo` and `VAR2=bar` as environment variables. I suggest to use the `ssm:` prefix in front of the value of the parameter to let a future implementation using Secrets Manager.
 
 This project is fully compatible with the behavior of the original library, whose documentation I report below.
 
