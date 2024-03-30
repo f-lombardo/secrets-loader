@@ -15,8 +15,8 @@ class SecretsTest extends TestCase
 
     public function setUp(): void
     {
-        if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters.php')) {
-            unlink(sys_get_temp_dir() . '/bref-ssm-parameters.php');
+        if (file_exists(sys_get_temp_dir() . '/bref-ssm.php')) {
+            unlink(sys_get_temp_dir() . '/bref-ssm.php');
         }
         if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters-store.json')) {
             unlink(sys_get_temp_dir() . '/bref-ssm-parameters-store.json');

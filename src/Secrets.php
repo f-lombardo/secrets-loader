@@ -4,7 +4,6 @@ namespace Bref\Secrets;
 
 use AsyncAws\SecretsManager\Exception\ResourceNotFoundException;
 use AsyncAws\Ssm\SsmClient;
-use Closure;
 use JsonException;
 use RuntimeException;
 
@@ -36,18 +35,19 @@ class Secrets
 
         $ssmNames = self::extractNames($envVars, 'bref-ssm:');
         if (! empty($ssmNames)) {
-            $actuallyCalledSsm = false;
-            $parameters = self::readParametersFromCacheOr('bref-ssm-parameters', function () use ($ssmClient, $ssmNames, &$actuallyCalledSsm) {
-                $actuallyCalledSsm = true;
+            $paramCache = new ParameterCache('bref-ssm');
+            $parameters = $paramCache->readParametersFromCacheOr(function () use ($ssmClient, $ssmNames) {
                 return self::retrieveParametersFromSsm($ssmClient, $ssmNames);
             });
+
             foreach ($parameters as $parameterName => $parameterValue) {
                 $envVar = array_search($parameterName, $ssmNames, true);
                 self::setEnvValue($parameterValue, $envVar);
             }
+
             // Only log once (when the cache was empty) else it might spam the logs in the function runtime
             // (where the process restarts on every invocation)
-            if ($actuallyCalledSsm) {
+            if ($paramCache->functionActuallyCalled()) {
                 $message = '[Bref] Loaded these environment variables from SSM: ' . implode(', ', array_keys($ssmNames));
                 self::logToStderr($message);
             }
@@ -55,51 +55,21 @@ class Secrets
 
         $secretsNames = self::extractNames($envVars, 'bref-secretsmanager:');
         if (! empty($secretsNames)) {
-            $actuallyCalledSecretsManager = false;
-            $parameters = self::readParametersFromCacheOr('bref-secretsmanager', function () use ($secretsNames, &$actuallyCalledSecretsManager) {
-                $actuallyCalledSecretsManager = true;
+            $paramCache = new ParameterCache('bref-secretsmanager');
+            $parameters = $paramCache->readParametersFromCacheOr(function () use ($secretsNames) {
                 return self::retrieveParametersFromSecrets($secretsNames);
             });
+
             foreach ($parameters as $parameterName => $parameterValue) {
                 $envVar = array_search($parameterName, $secretsNames, true);
                 self::setEnvValue($parameterValue, $envVar);
             }
 
-            if ($actuallyCalledSecretsManager) {
+            if ($paramCache->functionActuallyCalled()) {
                 $message = '[Bref] Loaded these environment variables from Secrets Manager: ' . implode(', ', array_keys($secretsNames));
                 self::logToStderr($message);
             }
         }
-    }
-
-    /**
-     * Cache the parameters in a temp file.
-     * Why? Because on the function runtime, the PHP process might
-     * restart on every invocation (or on error), so we don't want to
-     * call SSM every time.
-     *
-     * @param Closure(): array<string, string> $paramResolver
-     * @return array<string, string> Map of parameter name -> value
-     * @throws JsonException
-     */
-    private static function readParametersFromCacheOr(string $cacheName, Closure $paramResolver): array
-    {
-        // Check in cache first
-        $cacheFile = sys_get_temp_dir() . '/' . $cacheName . '.php';
-        if (is_file($cacheFile)) {
-            $parameters = json_decode(file_get_contents($cacheFile), true, 512, JSON_THROW_ON_ERROR);
-            if (is_array($parameters)) {
-                return $parameters;
-            }
-        }
-
-        // Not in cache yet: we resolve it
-        $parameters = $paramResolver();
-
-        // Using json_encode instead of var_export due to possible security issues
-        file_put_contents($cacheFile, json_encode($parameters, JSON_THROW_ON_ERROR));
-
-        return $parameters;
     }
 
     /**
