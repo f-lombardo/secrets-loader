@@ -13,8 +13,8 @@ class SecretsWithSecretsManagerTest extends TestCase
 
     public function setUp(): void
     {
-        if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters.php')) {
-            unlink(sys_get_temp_dir() . '/bref-ssm-parameters.php');
+        if (file_exists(sys_get_temp_dir() . '/bref-secretsmanager.php')) {
+            unlink(sys_get_temp_dir() . '/bref-secretsmanager.php');
         }
         if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters-store.json')) {
             unlink(sys_get_temp_dir() . '/bref-ssm-parameters-store.json');
@@ -43,7 +43,7 @@ class SecretsWithSecretsManagerTest extends TestCase
         $this->assertSame('helloworld', getenv('SOME_OTHER_VARIABLE'));
     }
 
-    public function testThrowsAClearErrorMssageOnMissingParameter(): void
+    public function testThrowsAClearErrorMessageOnMissingParameter(): void
     {
         $client = SecretManagerClientFactory::getClient();
         putenv('SOME_VARIABLE=bref-secretsmanager:/some/parameter');

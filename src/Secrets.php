@@ -37,7 +37,7 @@ class Secrets
         $ssmNames = self::extractNames($envVars, 'bref-ssm:');
         if (! empty($ssmNames)) {
             $actuallyCalledSsm = false;
-            $parameters = self::readParametersFromCacheOr(function () use ($ssmClient, $ssmNames, &$actuallyCalledSsm) {
+            $parameters = self::readParametersFromCacheOr('bref-ssm-parameters', function () use ($ssmClient, $ssmNames, &$actuallyCalledSsm) {
                 $actuallyCalledSsm = true;
                 return self::retrieveParametersFromSsm($ssmClient, array_values($ssmNames));
             });
@@ -56,7 +56,7 @@ class Secrets
         $secretsNames = self::extractNames($envVars, 'bref-secretsmanager:');
         if (! empty($secretsNames)) {
             $actuallyCalledSecretsManager = false;
-            $parameters = self::readParametersFromCacheOr(function () use ($secretsNames, &$actuallyCalledSecretsManager) {
+            $parameters = self::readParametersFromCacheOr('bref-secretsmanager', function () use ($secretsNames, &$actuallyCalledSecretsManager) {
                 $actuallyCalledSecretsManager = true;
                 return self::retrieveParametersFromSecrets($secretsNames);
             });
@@ -82,10 +82,10 @@ class Secrets
      * @return array<string, string> Map of parameter name -> value
      * @throws JsonException
      */
-    private static function readParametersFromCacheOr(Closure $paramResolver): array
+    private static function readParametersFromCacheOr(string $cacheName, Closure $paramResolver): array
     {
         // Check in cache first
-        $cacheFile = sys_get_temp_dir() . '/bref-ssm-parameters.php';
+        $cacheFile = sys_get_temp_dir() . '/' . $cacheName . '.php';
         if (is_file($cacheFile)) {
             $parameters = json_decode(file_get_contents($cacheFile), true, 512, JSON_THROW_ON_ERROR);
             if (is_array($parameters)) {
