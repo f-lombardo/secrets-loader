@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+    php:
+        container_name: ${COMPOSE_PROJECT_NAME}-php
+        build:
+            context: php
+        volumes:
+            - ${APP_PATH}:/var/${COMPOSE_PROJECT_NAME}
+        environment:
+            PHP_IDE_CONFIG: serverName=PHPSTORM
+            AWS_ENDPOINT_URL: http://localstack:4566
+            AWS_DEFAULT_REGION: ${REGION}
+            AWS_REGION: ${REGION}
+            DEFAULT_REGION: ${REGION}
+            AWS_ACCESS_KEY_ID: admin
+            AWS_SECRET_ACCESS_KEY: admin
+
+    localstack:
+        container_name: ${COMPOSE_PROJECT_NAME}-localstack
+        image: localstack/localstack
+        restart: always
+        ports:
+            - 4566:4566
+            - 4571:4571
+        environment:
+            AWS_DEFAULT_REGION: ${REGION}
+            AWS_REGION: ${REGION}
+            DEFAULT_REGION: ${REGION}
+            AWS_ACCESS_KEY_ID: admin
+            AWS_SECRET_ACCESS_KEY: admin
+            SERVICES: secretsmanager,ssm

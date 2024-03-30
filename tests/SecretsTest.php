@@ -26,7 +26,7 @@ class SecretsTest extends TestCase
         putenv('BAR');
     }
 
-    public function test decrypts env variables(): void
+    public function testDecryptsEnvVariables(): void
     {
         putenv('SOME_VARIABLE=bref-ssm:/some/parameter');
         putenv('SOME_OTHER_VARIABLE=helloworld');
@@ -42,7 +42,7 @@ class SecretsTest extends TestCase
         $this->assertSame('helloworld', getenv('SOME_OTHER_VARIABLE'));
     }
 
-    public function test caches parameters to call SSM only once(): void
+    public function testCachesParametersToCallSSMOnlyOnce(): void
     {
         putenv('SOME_VARIABLE=bref-ssm:/some/parameter');
 
@@ -54,7 +54,7 @@ class SecretsTest extends TestCase
         $this->assertSame('foobar', getenv('SOME_VARIABLE'));
     }
 
-    public function test decrypts env variables from parameter store(): void
+    public function testDecryptsEnvVariablesFromParameterStore(): void
     {
         putenv(Secrets::PARAMETER_STORE_VAR_NAME . '=/some/parameter');
         putenv('SOME_OTHER_VARIABLE=helloworld');
@@ -77,7 +77,7 @@ class SecretsTest extends TestCase
         $this->assertSame('helloworld', getenv('SOME_OTHER_VARIABLE'));
     }
 
-    public function test caches parameters from parameter store to call SSM only once(): void
+    public function testCachesParametersFromParametersStoreToCallSSMOnlyOnce(): void
     {
         putenv(Secrets::PARAMETER_STORE_VAR_NAME . '=/some/parameter');
         putenv('SOME_OTHER_VARIABLE=helloworld');
@@ -102,7 +102,7 @@ class SecretsTest extends TestCase
         $this->asserVarIsSet('baz', 'BAR');
     }
 
-    public function test throws a clear error message on missing permissions(): void
+    public function testThrowsAClearErrorMssageOnMissingPermissions(): void
     {
         putenv('SOME_VARIABLE=bref-ssm:/app/test');
 
