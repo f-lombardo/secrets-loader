@@ -8,13 +8,16 @@ class SecretsManager
 {
     use SecretManagerClientCreation;
 
-    public static function getSecret(string $secretId, bool $isJson): mixed
-    {
-        $client = new SecretsManagerClient([
-            'region' => $_ENV['AWS_REGION'] ?? $_ENV['AWS_DEFAULT_REGION'],
-        ]);
+    private SecretsManagerClient $client;
 
-        $result = $client->getSecretValue([
+    public function __construct()
+    {
+        $this->client = self::getSecretsManagerClient();
+    }
+
+    public function getSecret(string $secretId, bool $isJson): mixed
+    {
+        $result = $this->client->getSecretValue([
             'SecretId' => $secretId,
         ]);
 

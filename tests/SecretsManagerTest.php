@@ -20,7 +20,7 @@ class SecretsManagerTest extends TestCase
 
         $this->createSecret($client, $secretId, $secret);
 
-        $secretValue = SecretsManager::getSecret($secretId, true);
+        $secretValue = (new SecretsManager)->getSecret($secretId, true);
 
         $this->assertEquals('admin', $secretValue['username']);
         $this->assertEquals('xyz', $secretValue['password']);
@@ -35,7 +35,7 @@ class SecretsManagerTest extends TestCase
 
         $this->createSecret($client, $secretId, $secret);
 
-        $secretValue = SecretsManager::getSecret($secretId, false);
+        $secretValue = (new SecretsManager)->getSecret($secretId, false);
 
         $this->assertEquals($secret, $secretValue);
     }

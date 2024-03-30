@@ -33,18 +33,11 @@ class Secrets
             }
         }
 
-        // Only consider environment variables that start with "bref-ssm:"
-        $envVarsToDecrypt = array_filter($envVars, function (string $value): bool {
-            return str_starts_with($value, 'bref-ssm:');
-        });
-        if (empty($envVarsToDecrypt)) {
+        $ssmNames = self::extractNames($envVars, 'bref-ssm:');
+
+        if (empty($ssmNames)) {
             return;
         }
-
-        // Extract the SSM parameter names by removing the "bref-ssm:" prefix
-        $ssmNames = array_map(function (string $value): string {
-            return substr($value, strlen('bref-ssm:'));
-        }, $envVarsToDecrypt);
 
         $actuallyCalledSsm = false;
         $parameters = self::readParametersFromCacheOr(function () use ($ssmClient, $ssmNames, &$actuallyCalledSsm) {
@@ -60,7 +53,7 @@ class Secrets
         // Only log once (when the cache was empty) else it might spam the logs in the function runtime
         // (where the process restarts on every invocation)
         if ($actuallyCalledSsm) {
-            $message = '[Bref] Loaded these environment variables from SSM: ' . implode(', ', array_keys($envVarsToDecrypt));
+            $message = '[Bref] Loaded these environment variables from SSM: ' . implode(', ', array_keys($ssmNames));
             self::logToStderr($message);
         }
     }
@@ -204,5 +197,25 @@ class Secrets
         }
 
         return $values;
+    }
+
+    /**
+     * @param  array<string,string> $envVars
+     * @return array<string, string>
+     */
+    private static function extractNames(array $envVars, string $prefix): array
+    {
+        // Only consider environment variables that start with "bref-ssm:"
+        $envVarsToDecrypt = array_filter($envVars, function (string $value) use ($prefix): bool {
+            return str_starts_with($value, $prefix);
+        });
+        if (empty($envVarsToDecrypt)) {
+            return [];
+        }
+
+        // Extract the SSM parameter names by removing the "bref-ssm:" prefix
+        return array_map(function (string $value) use ($prefix): string {
+            return substr($value, strlen($prefix));
+        }, $envVarsToDecrypt);
     }
 }

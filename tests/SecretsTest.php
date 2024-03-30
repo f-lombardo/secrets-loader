@@ -5,12 +5,13 @@ namespace Bref\Secrets\Test;
 use AsyncAws\Core\Test\ResultMockFactory;
 use AsyncAws\Ssm\Result\GetParametersResult;
 use AsyncAws\Ssm\SsmClient;
-use AsyncAws\Ssm\ValueObject\Parameter;
 use Bref\Secrets\Secrets;
 use PHPUnit\Framework\TestCase;
 
 class SecretsTest extends TestCase
 {
+    use TestUtils;
+
     public function setUp(): void
     {
         if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters.php')) {
@@ -116,39 +117,5 @@ class SecretsTest extends TestCase
         $expected = preg_quote("Bref was not able to resolve secrets contained in environment variables from SSM because of a permissions issue with the SSM API. Did you add IAM permissions in serverless.yml to allow Lambda to access SSM? (docs: https://bref.sh/docs/environment/variables.html#at-deployment-time).\nFull exception message:", '/');
         $this->expectExceptionMessageMatches("/$expected .+/");
         Secrets::loadSecretEnvironmentVariables($ssmClient);
-    }
-
-    private function mockSsmClient(string $parameterValue = 'foobar'): SsmClient
-    {
-        $ssmClient = $this->getMockBuilder(SsmClient::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getParameters'])
-            ->getMock();
-
-        $result = ResultMockFactory::create(GetParametersResult::class, [
-            'Parameters' => [
-                new Parameter([
-                    'Name' => '/some/parameter',
-                    'Value' => $parameterValue,
-                ]),
-            ],
-        ]);
-
-        $ssmClient->expects($this->once())
-            ->method('getParameters')
-            ->with([
-                'Names' => ['/some/parameter'],
-                'WithDecryption' => true,
-            ])
-            ->willReturn($result);
-
-        return $ssmClient;
-    }
-
-    private function asserVarIsSet(string $value, string $varName): void
-    {
-        $this->assertSame($value, getenv($varName));
-        $this->assertSame($value, $_SERVER[$varName]);
-        $this->assertSame($value, $_ENV[$varName]);
     }
 }
