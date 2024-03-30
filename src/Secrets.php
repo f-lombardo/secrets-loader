@@ -39,7 +39,7 @@ class Secrets
             $actuallyCalledSsm = false;
             $parameters = self::readParametersFromCacheOr('bref-ssm-parameters', function () use ($ssmClient, $ssmNames, &$actuallyCalledSsm) {
                 $actuallyCalledSsm = true;
-                return self::retrieveParametersFromSsm($ssmClient, array_values($ssmNames));
+                return self::retrieveParametersFromSsm($ssmClient, $ssmNames);
             });
             foreach ($parameters as $parameterName => $parameterValue) {
                 $envVar = array_search($parameterName, $ssmNames, true);
@@ -103,7 +103,7 @@ class Secrets
     }
 
     /**
-     * @param string[] $ssmNames
+     * @param string[] $ssmNames an array of names of ssn parameters
      * @return array<string, string> Map of parameter name -> value
      */
     private static function retrieveParametersFromSsm(?SsmClient $ssmClient, array $ssmNames): array
@@ -241,6 +241,9 @@ class Secrets
     }
 
     /**
+     * This function lists all env vars whose value start with $prefix
+     * and returns them in an array varName -> valueWithoutPrefix
+     *
      * @param  array<string,string> $envVars
      * @return array<string, string>
      */
