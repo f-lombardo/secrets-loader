@@ -4,7 +4,7 @@ namespace Bref\Secrets;
 
 use AsyncAws\SecretsManager\SecretsManagerClient;
 
-class SecretManagerClientCreation
+class SecretManagerClientFactory
 {
     public static function getSecretsManagerClient(): SecretsManagerClient
     {

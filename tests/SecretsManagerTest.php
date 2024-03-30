@@ -2,7 +2,7 @@
 
 namespace Bref\Secrets\Test;
 
-use Bref\Secrets\SecretManagerClientCreation;
+use Bref\Secrets\SecretManagerClientFactory;
 use Bref\Secrets\SecretsManager;
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +13,7 @@ class SecretsManagerTest extends TestCase
         $secretId = 'MyTestSecret1';
         $secret = '{"username":"admin", "password":"xyz"}';
 
-        $client = SecretManagerClientCreation::getSecretsManagerClient();
+        $client = SecretManagerClientFactory::getSecretsManagerClient();
 
         SecretsManagerTestUtils::createSecret($client, $secretId, $secret);
 
@@ -28,7 +28,7 @@ class SecretsManagerTest extends TestCase
         $secretId = 'MyTestSecret1';
         $secret = 'foo';
 
-        $client = SecretManagerClientCreation::getSecretsManagerClient();
+        $client = SecretManagerClientFactory::getSecretsManagerClient();
 
         SecretsManagerTestUtils::createSecret($client, $secretId, $secret);
 

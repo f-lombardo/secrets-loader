@@ -3,7 +3,7 @@
 namespace Bref\Secrets\Test;
 
 use AsyncAws\Ssm\SsmClient;
-use Bref\Secrets\SecretManagerClientCreation;
+use Bref\Secrets\SecretManagerClientFactory;
 use Bref\Secrets\Secrets;
 use PHPUnit\Framework\TestCase;
 
@@ -27,7 +27,7 @@ class SecretsWithSecretsManagerTest extends TestCase
 
     public function testDecryptsEnvVariables(): void
     {
-        $client = SecretManagerClientCreation::getSecretsManagerClient();
+        $client = SecretManagerClientFactory::getSecretsManagerClient();
         putenv('SOME_VARIABLE=bref-secretsmanager:/some/parameter');
         SecretsManagerTestUtils::createSecret($client, '/some/parameter', 'foobar');
         putenv('SOME_OTHER_VARIABLE=helloworld');
@@ -45,7 +45,7 @@ class SecretsWithSecretsManagerTest extends TestCase
 
     public function testThrowsAClearErrorMssageOnMissingParameter(): void
     {
-        $client = SecretManagerClientCreation::getSecretsManagerClient();
+        $client = SecretManagerClientFactory::getSecretsManagerClient();
         putenv('SOME_VARIABLE=bref-secretsmanager:/some/parameter');
         SecretsManagerTestUtils::deleteSecret($client, '/some/parameter');
 
