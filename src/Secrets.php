@@ -43,7 +43,7 @@ class Secrets
             });
             foreach ($parameters as $parameterName => $parameterValue) {
                 $envVar = array_search($parameterName, $ssmNames, true);
-                self::setIniValue($parameterValue, $envVar);
+                self::setEnvValue($parameterValue, $envVar);
             }
             // Only log once (when the cache was empty) else it might spam the logs in the function runtime
             // (where the process restarts on every invocation)
@@ -62,7 +62,7 @@ class Secrets
             });
             foreach ($parameters as $parameterName => $parameterValue) {
                 $envVar = array_search($parameterName, $secretsNames, true);
-                self::setIniValue($parameterValue, $envVar);
+                self::setEnvValue($parameterValue, $envVar);
             }
 
             if ($actuallyCalledSecretsManager) {
@@ -186,7 +186,7 @@ class Secrets
         file_put_contents('php://stderr', date('[c] ') . $message . PHP_EOL, FILE_APPEND);
     }
 
-    private static function setIniValue(string $parameterValue, bool|int|string $envVar): void
+    private static function setEnvValue(string $parameterValue, bool|int|string $envVar): void
     {
         $_SERVER[$envVar] = $_ENV[$envVar] = $parameterValue;
         putenv("$envVar=$parameterValue");
@@ -217,7 +217,7 @@ class Secrets
         }
 
         foreach ($values as $key => $value) {
-            self::setIniValue($value, $key);
+            self::setEnvValue($value, $key);
         }
 
         return $actuallyCalledSsm;
