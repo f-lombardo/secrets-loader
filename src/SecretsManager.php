@@ -10,7 +10,7 @@ class SecretsManager
 
     public function __construct()
     {
-        $this->client = SecretManagerClientFactory::getSecretsManagerClient();
+        $this->client = SecretManagerClientFactory::getClient();
     }
 
     public function getSecret(string $secretId, bool $isJson): mixed

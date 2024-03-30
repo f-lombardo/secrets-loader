@@ -13,7 +13,7 @@ class SecretsManagerTest extends TestCase
         $secretId = 'MyTestSecret1';
         $secret = '{"username":"admin", "password":"xyz"}';
 
-        $client = SecretManagerClientFactory::getSecretsManagerClient();
+        $client = SecretManagerClientFactory::getClient();
 
         SecretsManagerTestUtils::createSecret($client, $secretId, $secret);
 
@@ -28,7 +28,7 @@ class SecretsManagerTest extends TestCase
         $secretId = 'MyTestSecret1';
         $secret = 'foo';
 
-        $client = SecretManagerClientFactory::getSecretsManagerClient();
+        $client = SecretManagerClientFactory::getClient();
 
         SecretsManagerTestUtils::createSecret($client, $secretId, $secret);
 

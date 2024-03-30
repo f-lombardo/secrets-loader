@@ -27,7 +27,7 @@ class SecretsWithSecretsManagerTest extends TestCase
 
     public function testDecryptsEnvVariables(): void
     {
-        $client = SecretManagerClientFactory::getSecretsManagerClient();
+        $client = SecretManagerClientFactory::getClient();
         putenv('SOME_VARIABLE=bref-secretsmanager:/some/parameter');
         SecretsManagerTestUtils::createSecret($client, '/some/parameter', 'foobar');
         putenv('SOME_OTHER_VARIABLE=helloworld');
@@ -45,7 +45,7 @@ class SecretsWithSecretsManagerTest extends TestCase
 
     public function testThrowsAClearErrorMssageOnMissingParameter(): void
     {
-        $client = SecretManagerClientFactory::getSecretsManagerClient();
+        $client = SecretManagerClientFactory::getClient();
         putenv('SOME_VARIABLE=bref-secretsmanager:/some/parameter');
         SecretsManagerTestUtils::deleteSecret($client, '/some/parameter');
 
