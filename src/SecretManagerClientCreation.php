@@ -4,9 +4,9 @@ namespace Bref\Secrets;
 
 use AsyncAws\SecretsManager\SecretsManagerClient;
 
-trait SecretManagerClientCreation
+class SecretManagerClientCreation
 {
-    private static function getSecretsManagerClient(): SecretsManagerClient
+    public static function getSecretsManagerClient(): SecretsManagerClient
     {
         return new SecretsManagerClient([
             'region' => $_ENV['AWS_REGION'] ?? $_ENV['AWS_DEFAULT_REGION'],

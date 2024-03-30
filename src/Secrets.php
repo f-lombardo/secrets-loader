@@ -2,6 +2,7 @@
 
 namespace Bref\Secrets;
 
+use AsyncAws\SecretsManager\Exception\ResourceNotFoundException;
 use AsyncAws\Ssm\SsmClient;
 use Closure;
 use JsonException;
@@ -34,27 +35,40 @@ class Secrets
         }
 
         $ssmNames = self::extractNames($envVars, 'bref-ssm:');
-
-        if (empty($ssmNames)) {
-            return;
+        if (! empty($ssmNames)) {
+            $actuallyCalledSsm = false;
+            $parameters = self::readParametersFromCacheOr(function () use ($ssmClient, $ssmNames, &$actuallyCalledSsm) {
+                $actuallyCalledSsm = true;
+                return self::retrieveParametersFromSsm($ssmClient, array_values($ssmNames));
+            });
+            foreach ($parameters as $parameterName => $parameterValue) {
+                $envVar = array_search($parameterName, $ssmNames, true);
+                self::setIniValue($parameterValue, $envVar);
+            }
+            // Only log once (when the cache was empty) else it might spam the logs in the function runtime
+            // (where the process restarts on every invocation)
+            if ($actuallyCalledSsm) {
+                $message = '[Bref] Loaded these environment variables from SSM: ' . implode(', ', array_keys($ssmNames));
+                self::logToStderr($message);
+            }
         }
 
-        $actuallyCalledSsm = false;
-        $parameters = self::readParametersFromCacheOr(function () use ($ssmClient, $ssmNames, &$actuallyCalledSsm) {
-            $actuallyCalledSsm = true;
-            return self::retrieveParametersFromSsm($ssmClient, array_values($ssmNames));
-        });
+        $secretsNames = self::extractNames($envVars, 'bref-secretsmanager:');
+        if (! empty($secretsNames)) {
+            $actuallyCalledSecretsManager = false;
+            $parameters = self::readParametersFromCacheOr(function () use ($secretsNames, &$actuallyCalledSecretsManager) {
+                $actuallyCalledSecretsManager = true;
+                return self::retrieveParametersFromSecrets($secretsNames);
+            });
+            foreach ($parameters as $parameterName => $parameterValue) {
+                $envVar = array_search($parameterName, $secretsNames, true);
+                self::setIniValue($parameterValue, $envVar);
+            }
 
-        foreach ($parameters as $parameterName => $parameterValue) {
-            $envVar = array_search($parameterName, $ssmNames, true);
-            self::setIniValue($parameterValue, $envVar);
-        }
-
-        // Only log once (when the cache was empty) else it might spam the logs in the function runtime
-        // (where the process restarts on every invocation)
-        if ($actuallyCalledSsm) {
-            $message = '[Bref] Loaded these environment variables from SSM: ' . implode(', ', array_keys($ssmNames));
-            self::logToStderr($message);
+            if ($actuallyCalledSecretsManager) {
+                $message = '[Bref] Loaded these environment variables from Secrets Manager: ' . implode(', ', array_keys($secretsNames));
+                self::logToStderr($message);
+            }
         }
     }
 
@@ -134,6 +148,33 @@ class Secrets
     }
 
     /**
+     * @param string[] $names
+     * @return array<string, string> Map of parameter name -> value
+     */
+    private static function retrieveParametersFromSecrets(array $names): array
+    {
+        $secretsManager = new SecretsManager;
+
+        /** @var array<string, string> $parameters Map of parameter name -> value */
+        $parameters = [];
+        $parametersNotFound = [];
+
+        foreach ($names as $name) {
+            try {
+                $parameters[$name] = $secretsManager->getSecret($name, false);
+            } catch (ResourceNotFoundException $e) {
+                $parametersNotFound[] = $name;
+            }
+        }
+
+        if (count($parametersNotFound) > 0) {
+            throw new RuntimeException('The following Secrets Manager parameters could not be found: ' . implode(', ', $parametersNotFound));
+        }
+
+        return $parameters;
+    }
+
+    /**
      * This method logs to stderr.
      *
      * It must only be used in a lambda environment since all error output will be logged.
@@ -205,7 +246,7 @@ class Secrets
      */
     private static function extractNames(array $envVars, string $prefix): array
     {
-        // Only consider environment variables that start with "bref-ssm:"
+        // Only consider environment variables that start with $prefix
         $envVarsToDecrypt = array_filter($envVars, function (string $value) use ($prefix): bool {
             return str_starts_with($value, $prefix);
         });
@@ -213,7 +254,7 @@ class Secrets
             return [];
         }
 
-        // Extract the SSM parameter names by removing the "bref-ssm:" prefix
+        // Extract the SSM parameter names by removing the prefix
         return array_map(function (string $value) use ($prefix): string {
             return substr($value, strlen($prefix));
         }, $envVarsToDecrypt);

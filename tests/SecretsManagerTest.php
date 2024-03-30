@@ -2,23 +2,20 @@
 
 namespace Bref\Secrets\Test;
 
-use AsyncAws\SecretsManager\SecretsManagerClient;
 use Bref\Secrets\SecretManagerClientCreation;
 use Bref\Secrets\SecretsManager;
 use PHPUnit\Framework\TestCase;
 
 class SecretsManagerTest extends TestCase
 {
-    use SecretManagerClientCreation;
-
     public function testCanReadSecretsInJsonForm(): void
     {
         $secretId = 'MyTestSecret1';
         $secret = '{"username":"admin", "password":"xyz"}';
 
-        $client = $this->getSecretsManagerClient();
+        $client = SecretManagerClientCreation::getSecretsManagerClient();
 
-        $this->createSecret($client, $secretId, $secret);
+        SecretsManagerTestUtils::createSecret($client, $secretId, $secret);
 
         $secretValue = (new SecretsManager)->getSecret($secretId, true);
 
@@ -31,27 +28,12 @@ class SecretsManagerTest extends TestCase
         $secretId = 'MyTestSecret1';
         $secret = 'foo';
 
-        $client = $this->getSecretsManagerClient();
+        $client = SecretManagerClientCreation::getSecretsManagerClient();
 
-        $this->createSecret($client, $secretId, $secret);
+        SecretsManagerTestUtils::createSecret($client, $secretId, $secret);
 
         $secretValue = (new SecretsManager)->getSecret($secretId, false);
 
         $this->assertEquals($secret, $secretValue);
-    }
-
-    private function createSecret(SecretsManagerClient $client, string $secretId, string $secret): void
-    {
-        $this->deleteSecret($client, $secretId);
-
-        $client->createSecret([
-            'Name' => $secretId,
-            'SecretString' => $secret,
-        ]);
-    }
-
-    private function deleteSecret(SecretsManagerClient $client, string $secretId): void
-    {
-        $client->deleteSecret(['SecretId' => $secretId, 'ForceDeleteWithoutRecovery' => true]);
     }
 }

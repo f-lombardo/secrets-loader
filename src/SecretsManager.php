@@ -6,13 +6,11 @@ use AsyncAws\SecretsManager\SecretsManagerClient;
 
 class SecretsManager
 {
-    use SecretManagerClientCreation;
-
     private SecretsManagerClient $client;
 
     public function __construct()
     {
-        $this->client = self::getSecretsManagerClient();
+        $this->client = SecretManagerClientCreation::getSecretsManagerClient();
     }
 
     public function getSecret(string $secretId, bool $isJson): mixed
