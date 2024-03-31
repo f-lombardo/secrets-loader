@@ -4,6 +4,7 @@ namespace Bref\Secrets;
 
 use AsyncAws\SecretsManager\Exception\ResourceNotFoundException;
 use AsyncAws\Ssm\SsmClient;
+use Closure;
 use JsonException;
 use RuntimeException;
 
@@ -34,24 +35,10 @@ class Secrets
         }
 
         $ssmNames = self::extractNames($envVars, 'bref-ssm:');
-        if (! empty($ssmNames)) {
-            $paramCache = new ParameterCache('bref-ssm');
-            $parameters = $paramCache->readParametersFromCacheOr(function () use ($ssmClient, $ssmNames) {
-                return self::retrieveParametersFromSsm($ssmClient, $ssmNames);
-            });
-
-            foreach ($parameters as $parameterName => $parameterValue) {
-                $envVar = array_search($parameterName, $ssmNames, true);
-                self::setEnvValue($parameterValue, $envVar);
-            }
-
-            // Only log once (when the cache was empty) else it might spam the logs in the function runtime
-            // (where the process restarts on every invocation)
-            if ($paramCache->functionActuallyCalled()) {
-                $message = '[Bref] Loaded these environment variables from SSM: ' . implode(', ', array_keys($ssmNames));
-                self::logToStderr($message);
-            }
-        }
+        $paramResolver = function () use ($ssmClient, $ssmNames) {
+            return self::retrieveParametersFromSsm($ssmClient, $ssmNames);
+        };
+        self::loadParametersUsingCache($ssmNames, 'bref-ssm', $paramResolver);
 
         $secretsNames = self::extractNames($envVars, 'bref-secretsmanager:');
         if (! empty($secretsNames)) {
@@ -231,5 +218,38 @@ class Secrets
         return array_map(function (string $value) use ($prefix): string {
             return substr($value, strlen($prefix));
         }, $envVarsToDecrypt);
+    }
+
+    /**
+     *  Cache the parameters in a temp file.
+     *  Why? Because on the function runtime, the PHP process might
+     *  restart on every invocation (or on error), so we don't want to
+     *  call SSM every time.
+     *
+     *  @param array<string, string> $awsNames
+     *  @param Closure(): array<string, string> $paramResolver
+     *  @throws JsonException
+     * /
+     */
+    private static function loadParametersUsingCache(array $awsNames, string $cacheName, Closure $paramResolver): void
+    {
+        if (empty($awsNames)) {
+            return;
+        }
+
+        $paramCache = new ParameterCache($cacheName);
+        $parameters = $paramCache->readParametersFromCacheOr($paramResolver);
+
+        foreach ($parameters as $parameterName => $parameterValue) {
+            $envVar = array_search($parameterName, $awsNames, true);
+            self::setEnvValue($parameterValue, $envVar);
+        }
+
+        // Only log once (when the cache was empty) else it might spam the logs in the function runtime
+        // (where the process restarts on every invocation)
+        if ($paramCache->functionActuallyCalled()) {
+            $message = "[Bref] Loaded these environment variables for $cacheName: " . implode(', ', array_keys($awsNames));
+            self::logToStderr($message);
+        }
     }
 }
