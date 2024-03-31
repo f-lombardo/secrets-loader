@@ -18,8 +18,8 @@ class SecretsTest extends TestCase
         if (file_exists(sys_get_temp_dir() . '/bref-ssm.php')) {
             unlink(sys_get_temp_dir() . '/bref-ssm.php');
         }
-        if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters-store.json')) {
-            unlink(sys_get_temp_dir() . '/bref-ssm-parameters-store.json');
+        if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters-store.php')) {
+            unlink(sys_get_temp_dir() . '/bref-ssm-parameters-store.php');
         }
         putenv('SOME_VARIABLE');
         putenv('SOME_OTHER_VARIABLE');

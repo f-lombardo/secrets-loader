@@ -27,11 +27,10 @@ class Secrets
         }
 
         if (\array_key_exists(self::PARAMETER_STORE_VAR_NAME, $envVars)) {
-            $parameterStoreName = $envVars[self::PARAMETER_STORE_VAR_NAME];
-            $actuallyCalledSsm = self::readEnvFromCacheOrParameterStore($parameterStoreName, $ssmClient);
-            if ($actuallyCalledSsm) {
-                self::logToStderr('[Bref] Loaded environment variables from SSM parameter store ' . $parameterStoreName);
-            }
+            $parameterStoreNames = [self::PARAMETER_STORE_VAR_NAME => $envVars[self::PARAMETER_STORE_VAR_NAME]];
+            self::loadParametersUsingCache($parameterStoreNames, 'bref-ssm-parameters-store', true, function () use ($ssmClient, $parameterStoreNames) {
+                return self::readEnvFromParameterStore($parameterStoreNames[self::PARAMETER_STORE_VAR_NAME], $ssmClient);
+            });
         }
 
         $ssmNames = self::extractNames($envVars, 'bref-ssm:');
@@ -142,37 +141,6 @@ class Secrets
     {
         $_SERVER[$envVar] = $_ENV[$envVar] = $parameterValue;
         putenv("$envVar=$parameterValue");
-    }
-
-    /**
-     *  Decrypt environment variables that are saved in AWS SSM as a string in an .ini format, i.e.
-     *  VAR1=foo
-     *  VAR2=bar
-     *
-     * @param string$parameterStoreName The name of the SSM parameter containing the ini formatted string
-     * @param SsmClient|null $ssmClient To allow mocking in tests.
-     * @throws JsonException
-     */
-    private static function readEnvFromCacheOrParameterStore(string $parameterStoreName, ?SsmClient $ssmClient): bool
-    {
-        $cacheFile = sys_get_temp_dir() . '/bref-ssm-parameters-store.json';
-        if (is_file($cacheFile)) {
-            $values = json_decode(file_get_contents($cacheFile), true, 512, JSON_THROW_ON_ERROR);
-            if ($values === false) {
-                throw new \RuntimeException('Error parsing data from parameter store');
-            }
-            $actuallyCalledSsm = false;
-        } else {
-            $values = self::readEnvFromParameterStore($parameterStoreName, $ssmClient);
-            file_put_contents($cacheFile, json_encode($values, JSON_THROW_ON_ERROR));
-            $actuallyCalledSsm = true;
-        }
-
-        foreach ($values as $key => $value) {
-            self::setEnvValue($value, $key);
-        }
-
-        return $actuallyCalledSsm;
     }
 
     /**
