@@ -4,10 +4,10 @@ namespace Bref\Secrets\Test;
 
 trait TestUtils
 {
-    protected function asserVarIsSet(string $value, string $varName): void
+    protected function asserVarIsSet(string|int|bool $value, string $varName): void
     {
-        $this->assertSame($value, getenv($varName));
-        $this->assertSame($value, $_SERVER[$varName]);
-        $this->assertSame($value, $_ENV[$varName]);
+        $this->assertEquals($value, getenv($varName));
+        $this->assertEquals($value, $_SERVER[$varName]);
+        $this->assertEquals($value, $_ENV[$varName]);
     }
 }

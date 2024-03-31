@@ -35,13 +35,18 @@ class Secrets
         }
 
         $ssmNames = self::extractNames($envVars, 'bref-ssm:');
-        self::loadParametersUsingCache($ssmNames, 'bref-ssm', function () use ($ssmClient, $ssmNames) {
+        self::loadParametersUsingCache($ssmNames, 'bref-ssm', false, function () use ($ssmClient, $ssmNames) {
             return self::retrieveParametersFromSsm($ssmClient, $ssmNames);
         });
 
         $secretsNames = self::extractNames($envVars, 'bref-secretsmanager:');
-        self::loadParametersUsingCache($secretsNames, 'bref-secretsmanager', function () use ($secretsNames) {
-            return self::retrieveParametersFromSecrets($secretsNames);
+        self::loadParametersUsingCache($secretsNames, 'bref-secretsmanager', false, function () use ($secretsNames) {
+            return self::retrieveParametersFromSecrets($secretsNames, false);
+        });
+
+        $secretsJsonNames = self::extractNames($envVars, 'bref-secretsmanager-json:');
+        self::loadParametersUsingCache($secretsJsonNames, 'bref-secretsmanager-json', true, function () use ($secretsJsonNames) {
+            return self::retrieveParametersFromSecrets($secretsJsonNames, true);
         });
     }
 
@@ -94,17 +99,21 @@ class Secrets
      * @param string[] $names
      * @return array<string, string> Map of parameter name -> value
      */
-    private static function retrieveParametersFromSecrets(array $names): array
+    private static function retrieveParametersFromSecrets(array $names, bool $jsonFormat): array
     {
         $secretsManager = new SecretsManager;
 
-        /** @var array<string, string> $parameters Map of parameter name -> value */
+        /** @var array<string, string> $parameters Map of aws parameter name -> value */
         $parameters = [];
         $parametersNotFound = [];
 
         foreach ($names as $name) {
             try {
-                $parameters[$name] = $secretsManager->getSecret($name, false);
+                if ($jsonFormat) {
+                    $parameters += $secretsManager->getSecret($name, $jsonFormat);
+                } else {
+                    $parameters[$name] = $secretsManager->getSecret($name, $jsonFormat);
+                }
             } catch (ResourceNotFoundException $e) {
                 $parametersNotFound[] = $name;
             }
@@ -129,7 +138,7 @@ class Secrets
         file_put_contents('php://stderr', date('[c] ') . $message . PHP_EOL, FILE_APPEND);
     }
 
-    private static function setEnvValue(string $parameterValue, bool|int|string $envVar): void
+    private static function setEnvValue(bool|int|string $parameterValue, bool|int|string $envVar): void
     {
         $_SERVER[$envVar] = $_ENV[$envVar] = $parameterValue;
         putenv("$envVar=$parameterValue");
@@ -217,7 +226,7 @@ class Secrets
      *  @throws JsonException
      * /
      */
-    private static function loadParametersUsingCache(array $awsNames, string $cacheName, Closure $paramResolver): void
+    private static function loadParametersUsingCache(array $awsNames, string $cacheName, bool $multivalue, Closure $paramResolver): void
     {
         if (empty($awsNames)) {
             return;
@@ -227,14 +236,22 @@ class Secrets
         $parameters = $paramCache->readParametersFromCacheOr($paramResolver);
 
         foreach ($parameters as $parameterName => $parameterValue) {
-            $envVar = array_search($parameterName, $awsNames, true);
-            self::setEnvValue($parameterValue, $envVar);
+            if ($multivalue) {
+                self::setEnvValue($parameterValue, $parameterName);
+            } else {
+                $envVar = array_search($parameterName, $awsNames, true);
+                self::setEnvValue($parameterValue, $envVar);
+            }
         }
 
         // Only log once (when the cache was empty) else it might spam the logs in the function runtime
         // (where the process restarts on every invocation)
         if ($paramCache->functionActuallyCalled()) {
-            $message = "[Bref] Loaded these environment variables for $cacheName: " . implode(', ', array_keys($awsNames));
+            if ($multivalue) {
+                $message = "[Bref] Loaded these environment variables for $cacheName: " . implode(', ', array_keys($parameters));
+            } else {
+                $message = "[Bref] Loaded these environment variables for $cacheName: " . implode(', ', array_keys($awsNames));
+            }
             self::logToStderr($message);
         }
     }

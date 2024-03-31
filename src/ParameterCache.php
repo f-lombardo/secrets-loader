@@ -19,7 +19,7 @@ class ParameterCache
      * restart on every invocation (or on error), so we don't want to
      * call SSM every time.
      *
-     * @param Closure(): array<string, string> $paramResolver
+     * @param Closure(): array<string, bool|int|string> $paramResolver
      * @return array<string, string> Map of parameter name -> value
      * @throws JsonException
      */
