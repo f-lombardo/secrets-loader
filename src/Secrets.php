@@ -35,28 +35,14 @@ class Secrets
         }
 
         $ssmNames = self::extractNames($envVars, 'bref-ssm:');
-        $paramResolver = function () use ($ssmClient, $ssmNames) {
+        self::loadParametersUsingCache($ssmNames, 'bref-ssm', function () use ($ssmClient, $ssmNames) {
             return self::retrieveParametersFromSsm($ssmClient, $ssmNames);
-        };
-        self::loadParametersUsingCache($ssmNames, 'bref-ssm', $paramResolver);
+        });
 
         $secretsNames = self::extractNames($envVars, 'bref-secretsmanager:');
-        if (! empty($secretsNames)) {
-            $paramCache = new ParameterCache('bref-secretsmanager');
-            $parameters = $paramCache->readParametersFromCacheOr(function () use ($secretsNames) {
-                return self::retrieveParametersFromSecrets($secretsNames);
-            });
-
-            foreach ($parameters as $parameterName => $parameterValue) {
-                $envVar = array_search($parameterName, $secretsNames, true);
-                self::setEnvValue($parameterValue, $envVar);
-            }
-
-            if ($paramCache->functionActuallyCalled()) {
-                $message = '[Bref] Loaded these environment variables from Secrets Manager: ' . implode(', ', array_keys($secretsNames));
-                self::logToStderr($message);
-            }
-        }
+        self::loadParametersUsingCache($secretsNames, 'bref-secretsmanager', function () use ($secretsNames) {
+            return self::retrieveParametersFromSecrets($secretsNames);
+        });
     }
 
     /**
