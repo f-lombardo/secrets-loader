@@ -64,6 +64,29 @@ class SecretsWithSecretsManagerTest extends TestCase
         $this->asserVarIsSet(3, 'BAZ');
     }
 
+    public function testDecryptsEnvVariablesFromJsonReadingFromCache(): void
+    {
+        $client = SecretManagerClientFactory::getClient();
+
+        putenv('SOME_VARIABLE=bref-secretsmanager-json:/some/parameter');
+        SecretsManagerTestUtils::createSecret($client, '/some/parameter', '{"FOO": 1, "BAR": 2}');
+
+        putenv('SOME_OTHER_VARIABLE=bref-secretsmanager-json:/some/other-parameter');
+        SecretsManagerTestUtils::createSecret($client, '/some/other-parameter', '{"BAZ": 3}');
+
+        Secrets::loadSecretEnvironmentVariables($this->mockSsmClient());
+
+        putenv('FOO');
+        putenv('BAR');
+        putenv('BAZ');
+
+        Secrets::loadSecretEnvironmentVariables($this->mockSsmClient());
+
+        $this->asserVarIsSet(1, 'FOO');
+        $this->asserVarIsSet(2, 'BAR');
+        $this->asserVarIsSet(3, 'BAZ');
+    }
+
     public function testThrowsAClearErrorMessageOnMissingParameter(): void
     {
         $client = SecretManagerClientFactory::getClient();
