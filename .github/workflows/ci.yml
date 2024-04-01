@@ -2,7 +2,7 @@ name: CI
 
 on:
     push:
-        branches: ['master', 'secrets-manager']
+        branches: ['master']
     pull_request:
         branches: ['*']
     schedule:
@@ -39,6 +39,6 @@ jobs:
             -   name: Start LocalStack
                 run: cd docker && docker-compose up -d localstack
             -   name: Run quality checks
-                run: ./scripts/quality.sh
+                run: source ./docker/.env && ./scripts/quality.sh
             -   name: Stop LocalStack
                 run: docker-compose down
