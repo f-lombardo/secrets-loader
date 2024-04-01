@@ -2,14 +2,13 @@ name: CI
 
 on:
     push:
-        branches: ['master']
+        branches: ['master', 'secrets-manager']
     pull_request:
         branches: ['*']
     schedule:
         -   cron: '0 0 * * *'
 
 jobs:
-
     tests:
         name: Tests - PHP ${{ matrix.php }} ${{ matrix.dependency-version }}
         runs-on: ubuntu-latest
@@ -27,7 +26,7 @@ jobs:
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php }}
-                    tools: composer:v2
+                    tools: composer:v2, docker.compose
                     coverage: none
             -   name: Cache Composer dependencies
                 uses: actions/cache@v3
@@ -37,29 +36,9 @@ jobs:
                     restore-keys: php-${{ matrix.php }}-composer-locked-
             -   name: Install PHP dependencies
                 run: composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-progress --no-suggest
-            -   name: PHPUnit
-                run: vendor/bin/phpunit
-
-    cs:
-        name: Coding standards
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v3
-            -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: '8.2'
-                    tools: composer:v2, cs2pr
-                    coverage: none
-            -   name: Cache Composer dependencies
-                uses: actions/cache@v3
-                with:
-                    path: ~/.composer/cache
-                    key: php-composer-locked-${{ hashFiles('composer.lock') }}
-                    restore-keys: php-composer-locked-
-            -   name: Install PHP dependencies
-                run: composer install --no-interaction --no-progress --no-suggest
-            -   name: PHP CS
-                run: vendor/bin/phpcs -q --no-colors --report=checkstyle | cs2pr
-            -   name: PHPStan
-                run: vendor/bin/phpstan
+            -   name: Start LocalStack
+                run: cd docker && docker-compose up -d localstack
+            -   name: Run quality checks
+                run: ./scripts/quality.sh
+            -   name: Stop LocalStack
+                run: docker-compose down
