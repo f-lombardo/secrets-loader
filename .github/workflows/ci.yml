@@ -39,6 +39,6 @@ jobs:
             -   name: Start LocalStack
                 run: cd docker && docker-compose up -d localstack
             -   name: Run quality checks
-                run: source ./docker/.env && ./scripts/quality.sh
+                run: set -a && source ./docker/.env && ./scripts/quality.sh
             -   name: Stop LocalStack
                 run: docker-compose down
