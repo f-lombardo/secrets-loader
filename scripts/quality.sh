@@ -4,6 +4,6 @@
 # This script runs quality checks
 ########################################################################################################################
 
-echo "Project: ${COMPOSE_PROJECT_NAME}"
+echo "AWS_REGION: ${AWS_REGION}"
 
 vendor/bin/phpcbf && vendor/bin/phpcs && vendor/bin/phpstan && vendor/bin/phpunit
