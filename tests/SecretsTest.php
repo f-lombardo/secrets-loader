@@ -11,13 +11,15 @@ use PHPUnit\Framework\TestCase;
 
 class SecretsTest extends TestCase
 {
+    use TestUtils;
+
     public function setUp(): void
     {
-        if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters.php')) {
-            unlink(sys_get_temp_dir() . '/bref-ssm-parameters.php');
+        if (file_exists(sys_get_temp_dir() . '/bref-ssm.php')) {
+            unlink(sys_get_temp_dir() . '/bref-ssm.php');
         }
-        if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters-store.json')) {
-            unlink(sys_get_temp_dir() . '/bref-ssm-parameters-store.json');
+        if (file_exists(sys_get_temp_dir() . '/bref-ssm-parameters-store.php')) {
+            unlink(sys_get_temp_dir() . '/bref-ssm-parameters-store.php');
         }
         putenv('SOME_VARIABLE');
         putenv('SOME_OTHER_VARIABLE');
@@ -26,7 +28,7 @@ class SecretsTest extends TestCase
         putenv('BAR');
     }
 
-    public function test decrypts env variables(): void
+    public function testDecryptsEnvVariables(): void
     {
         putenv('SOME_VARIABLE=bref-ssm:/some/parameter');
         putenv('SOME_OTHER_VARIABLE=helloworld');
@@ -42,7 +44,7 @@ class SecretsTest extends TestCase
         $this->assertSame('helloworld', getenv('SOME_OTHER_VARIABLE'));
     }
 
-    public function test caches parameters to call SSM only once(): void
+    public function testCachesParametersToCallSSMOnlyOnce(): void
     {
         putenv('SOME_VARIABLE=bref-ssm:/some/parameter');
 
@@ -54,7 +56,7 @@ class SecretsTest extends TestCase
         $this->assertSame('foobar', getenv('SOME_VARIABLE'));
     }
 
-    public function test decrypts env variables from parameter store(): void
+    public function testDecryptsEnvVariablesFromParameterStore(): void
     {
         putenv(Secrets::PARAMETER_STORE_VAR_NAME . '=/some/parameter');
         putenv('SOME_OTHER_VARIABLE=helloworld');
@@ -77,7 +79,7 @@ class SecretsTest extends TestCase
         $this->assertSame('helloworld', getenv('SOME_OTHER_VARIABLE'));
     }
 
-    public function test caches parameters from parameter store to call SSM only once(): void
+    public function testCachesParametersFromParametersStoreToCallSSMOnlyOnce(): void
     {
         putenv(Secrets::PARAMETER_STORE_VAR_NAME . '=/some/parameter');
         putenv('SOME_OTHER_VARIABLE=helloworld');
@@ -102,7 +104,7 @@ class SecretsTest extends TestCase
         $this->asserVarIsSet('baz', 'BAR');
     }
 
-    public function test throws a clear error message on missing permissions(): void
+    public function testThrowsAClearErrorMssageOnMissingPermissions(): void
     {
         putenv('SOME_VARIABLE=bref-ssm:/app/test');
 
@@ -118,7 +120,7 @@ class SecretsTest extends TestCase
         Secrets::loadSecretEnvironmentVariables($ssmClient);
     }
 
-    private function mockSsmClient(string $parameterValue = 'foobar'): SsmClient
+    protected function mockSsmClient(string $parameterValue = 'foobar'): SsmClient
     {
         $ssmClient = $this->getMockBuilder(SsmClient::class)
             ->disableOriginalConstructor()
@@ -143,12 +145,5 @@ class SecretsTest extends TestCase
             ->willReturn($result);
 
         return $ssmClient;
-    }
-
-    private function asserVarIsSet(string $value, string $varName): void
-    {
-        $this->assertSame($value, getenv($varName));
-        $this->assertSame($value, $_SERVER[$varName]);
-        $this->assertSame($value, $_ENV[$varName]);
     }
 }

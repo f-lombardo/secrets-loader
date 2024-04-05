@@ -2,64 +2,35 @@ name: CI
 
 on:
     push:
-        branches: ['main']
+        branches: ['master']
     pull_request:
         branches: ['*']
     schedule:
-        -   cron: '0 0 * * *'
+        -   cron: '10 8 * * *'
 
 jobs:
-
     tests:
-        name: Tests - PHP ${{ matrix.php }} ${{ matrix.dependency-version }}
+        name: Tests - PHP ${{ matrix.php }}
         runs-on: ubuntu-latest
         timeout-minutes: 15
         strategy:
             matrix:
                 php: [ '8.0', '8.1', '8.2', '8.3' ]
-                dependency-version: [ '' ]
-                include:
-                    -   php: '8.0'
-                        dependency-version: '--prefer-lowest'
         steps:
-            -   uses: actions/checkout@v3
-            -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: ${{ matrix.php }}
-                    tools: composer:v2
-                    coverage: none
-            -   name: Cache Composer dependencies
-                uses: actions/cache@v3
-                with:
-                    path: ~/.composer/cache
-                    key: php-${{ matrix.php }}-composer-locked-${{ hashFiles('composer.lock') }}
-                    restore-keys: php-${{ matrix.php }}-composer-locked-
-            -   name: Install PHP dependencies
-                run: composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-progress --no-suggest
-            -   name: PHPUnit
-                run: vendor/bin/phpunit
+            - uses: actions/checkout@v3
 
-    cs:
-        name: Coding standards
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v3
-            -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: '8.2'
-                    tools: composer:v2, cs2pr
-                    coverage: none
-            -   name: Cache Composer dependencies
-                uses: actions/cache@v3
-                with:
-                    path: ~/.composer/cache
-                    key: php-composer-locked-${{ hashFiles('composer.lock') }}
-                    restore-keys: php-composer-locked-
-            -   name: Install PHP dependencies
-                run: composer install --no-interaction --no-progress --no-suggest
-            -   name: PHP CS
-                run: vendor/bin/phpcs -q --no-colors --report=checkstyle | cs2pr
-            -   name: PHPStan
-                run: vendor/bin/phpstan
+            - name: Run docker compose services
+              run: |
+                  cd docker
+                  export PHP_VERSION=${{matrix.php}}
+                  docker compose up -d
+
+            - name: Install dependencies
+              run: |
+                  cd docker
+                  docker compose -f docker-compose.yml exec -T php sh -c 'composer install'
+
+            - name: Lint and test
+              run: |
+                  cd docker
+                  docker compose -f docker-compose.yml exec -T php sh -c './scripts/quality.sh'
