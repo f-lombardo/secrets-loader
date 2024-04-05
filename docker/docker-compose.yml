@@ -5,14 +5,16 @@ services:
         container_name: ${COMPOSE_PROJECT_NAME}-php
         build:
             context: php
+            args:
+                PHP_VERSION: ${PHP_VERSION}
         volumes:
             - ${APP_PATH}:/var/${COMPOSE_PROJECT_NAME}
         environment:
             PHP_IDE_CONFIG: serverName=PHPSTORM
             AWS_ENDPOINT_URL: ${AWS_ENDOPOINT_URL}
-            AWS_REGION: ${AWS_REGION}
-            AWS_DEFAULT_REGION: ${AWS_REGION}
-            DEFAULT_REGION: ${AW_REGION}
+            AWS_REGION: ${REGION}
+            AWS_DEFAULT_REGION: ${REGION}
+            DEFAULT_REGION: ${REGION}
             AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY}
             AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
 
