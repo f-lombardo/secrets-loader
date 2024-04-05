@@ -4,4 +4,6 @@
 # This script runs quality checks
 ########################################################################################################################
 
+php -v
+
 vendor/bin/phpcbf && vendor/bin/phpcs && vendor/bin/phpstan && vendor/bin/phpunit
