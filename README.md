@@ -1,5 +1,6 @@
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/f-lombardo/secrets-loader/badge)](https://securityscorecards.dev/viewer/?uri=github.com/f-lombardo/secrets-loader)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=f-lombardo_secrets-loader&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=f-lombardo_secrets-loader)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8773/badge)](https://www.bestpractices.dev/projects/8773)
 
 # Load secrets 
 Automatically load secrets from SSM into environment variables when running with Bref.
