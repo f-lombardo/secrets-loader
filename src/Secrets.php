@@ -87,7 +87,7 @@ class Secrets
             $parametersNotFound = array_merge($parametersNotFound, $result->getInvalidParameters());
         }
 
-        if (count($parametersNotFound) > 0) {
+        if (! empty($parametersNotFound)) {
             throw new RuntimeException('The following SSM parameters could not be found: ' . implode(', ', $parametersNotFound));
         }
 
@@ -118,7 +118,7 @@ class Secrets
             }
         }
 
-        if (count($parametersNotFound) > 0) {
+        if (! empty($parametersNotFound)) {
             throw new RuntimeException('The following Secrets Manager parameters could not be found: ' . implode(', ', $parametersNotFound));
         }
 

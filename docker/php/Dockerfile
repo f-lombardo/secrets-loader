@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libzip-dev \
     libpq-dev \
-    libicu-dev
+    libicu-dev \
+    && apt-get clean
 
 # Install Composer
 COPY --from=composer /usr/bin/composer /usr/bin/composer
