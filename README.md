@@ -1,3 +1,5 @@
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/f-lombardo/secrets-loader/badge)](https://securityscorecards.dev/viewer/?uri=github.com/f-lombardo/secrets-loader)
+
 # Load secrets 
 Automatically load secrets from SSM into environment variables when running with Bref.
 
