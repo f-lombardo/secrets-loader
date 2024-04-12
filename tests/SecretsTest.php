@@ -30,12 +30,8 @@ class SecretsTest extends TestCase
 
     public function testDecryptsEnvVariables(): void
     {
-        putenv('SOME_VARIABLE=bref-ssm:/some/parameter');
-        putenv('SOME_OTHER_VARIABLE=helloworld');
-
-        // Sanity checks
-        $this->assertSame('bref-ssm:/some/parameter', getenv('SOME_VARIABLE'));
-        $this->assertSame('helloworld', getenv('SOME_OTHER_VARIABLE'));
+        $this->setEnvValueWithSanityCheck('SOME_VARIABLE', 'bref-ssm:/some/parameter');
+        $this->setEnvValueWithSanityCheck('SOME_OTHER_VARIABLE', 'helloworld');
 
         Secrets::loadSecretEnvironmentVariables($this->mockSsmClient());
 
@@ -46,7 +42,7 @@ class SecretsTest extends TestCase
 
     public function testCachesParametersToCallSSMOnlyOnce(): void
     {
-        putenv('SOME_VARIABLE=bref-ssm:/some/parameter');
+        $this->setEnvValueWithSanityCheck('SOME_VARIABLE', 'bref-ssm:/some/parameter');
 
         // Call twice, the mock will assert that SSM was only called once
         $ssmClient = $this->mockSsmClient();
@@ -58,12 +54,8 @@ class SecretsTest extends TestCase
 
     public function testDecryptsEnvVariablesFromParameterStore(): void
     {
-        putenv(Secrets::PARAMETER_STORE_VAR_NAME . '=/some/parameter');
-        putenv('SOME_OTHER_VARIABLE=helloworld');
-
-        // Sanity checks
-        $this->assertSame('/some/parameter', getenv('BREF_PARAMETER_STORE'));
-        $this->assertSame('helloworld', getenv('SOME_OTHER_VARIABLE'));
+        $this->setEnvValueWithSanityCheck(Secrets::PARAMETER_STORE_VAR_NAME, '/some/parameter');
+        $this->setEnvValueWithSanityCheck('SOME_OTHER_VARIABLE', 'helloworld');
 
         $storeContents = <<<'END'
         FOO=bar
@@ -81,12 +73,8 @@ class SecretsTest extends TestCase
 
     public function testCachesParametersFromParametersStoreToCallSSMOnlyOnce(): void
     {
-        putenv(Secrets::PARAMETER_STORE_VAR_NAME . '=/some/parameter');
-        putenv('SOME_OTHER_VARIABLE=helloworld');
-
-        // Sanity checks
-        $this->assertSame('/some/parameter', getenv('BREF_PARAMETER_STORE'));
-        $this->assertSame('helloworld', getenv('SOME_OTHER_VARIABLE'));
+        $this->setEnvValueWithSanityCheck(Secrets::PARAMETER_STORE_VAR_NAME, '/some/parameter');
+        $this->setEnvValueWithSanityCheck('SOME_OTHER_VARIABLE', 'helloworld');
 
         $storeContents = <<<'END'
         FOO=bar
@@ -106,7 +94,7 @@ class SecretsTest extends TestCase
 
     public function testThrowsAClearErrorMssageOnMissingPermissions(): void
     {
-        putenv('SOME_VARIABLE=bref-ssm:/app/test');
+        $this->setEnvValueWithSanityCheck('SOME_VARIABLE', 'bref-ssm:/some/parameter');
 
         $ssmClient = $this->getMockBuilder(SsmClient::class)
             ->disableOriginalConstructor()

@@ -4,6 +4,12 @@ namespace Bref\Secrets\Test;
 
 trait TestUtils
 {
+    public function setEnvValueWithSanityCheck(string $varName, string $value): void
+    {
+        putenv($varName . '=' . $value);
+        $this->assertSame($value, getenv($varName));
+    }
+
     protected function asserVarIsSet(string|int|bool $value, string $varName): void
     {
         $this->assertEquals($value, getenv($varName));
