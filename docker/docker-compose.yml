@@ -21,7 +21,6 @@ services:
     localstack:
         container_name: ${COMPOSE_PROJECT_NAME}-localstack
         image: localstack/localstack
-        restart: always
         ports:
             - 4566:4566
             - 4571:4571
