@@ -7,6 +7,7 @@ services:
             context: php
             args:
                 PHP_VERSION: ${PHP_VERSION}
+                COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
         volumes:
             - ${APP_PATH}:/var/${COMPOSE_PROJECT_NAME}
         environment:

@@ -22,4 +22,5 @@ RUN pecl install xdebug \
 COPY php-custom.ini /usr/local/etc/php/conf.d/docker-php-custom.ini
 COPY xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-WORKDIR /var/secrets-loader
+ARG COMPOSE_PROJECT_NAME
+WORKDIR /var/${COMPOSE_PROJECT_NAME}
